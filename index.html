@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>撤销小教程</title>
+    <style>
+        html{
+            background: pink;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <input type="text" v-model="inputData"/>
+        <button @click="onAddRecord">添加记录</button>
+        <div>
+                <button @click="onUndo">撤销</button>
+                <button @click="onBack">回退</button>
+        </div>
+        <div>
+            当前的值：{{currentValue}}
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        window.onload = function () {
+            //数据结构
+            function stack() {
+                var list = [];
+                return {
+                    /**
+                     * 入栈
+                     * @param {*} data
+                     */
+                    push(data) {
+                        list.push(data);
+                    },
+
+                    /**
+                     * 出栈
+                     */
+                    top() {
+                        return list.pop();
+                    },
+
+                    size() {
+                        return list.length;
+                    },
+
+                    empty() {
+                        return list.length === 0;
+                    },
+
+                    /**
+                     * 清空
+                     */
+                    clear() {
+                        list = [];
+                    },
+
+                    /**
+                     * 删除栈的第一个元素（栈底）
+                     */
+                    shift() {
+                        list.shift();
+                    },
+
+                    getTop(){
+                        return list[list.length-1];
+                    }
+                }
+            }
+
+            function recordObj() {
+                let undoStack = stack();
+                let rollbackStack = stack();
+                let recordLimit = 20;
+                return {
+                    value(){
+                        return undoStack.getTop();
+                    },
+                    addRecord(data) {
+                        if (undoStack.size() >= recordLimit) {
+                            undoStack.shift();
+                        }
+                        undoStack.push(data);
+                        rollbackStack.clear();
+                    },
+                    undoRecord() {
+                        if (undoStack.empty()) return;
+                        const data = undoStack.top();
+                        rollbackStack.push(data);
+                    },
+                    rollbackRecord() {
+                        if (rollbackStack.empty()) return;
+                        const data = rollbackStack.top();
+                        undoStack.push(data);
+                    }
+                }
+            }
+            var record = recordObj();
+
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    message: 'Hello Vue!',
+                    currentValue:"",
+                    inputData:""
+                },
+                methods: {
+                    onAddRecord() {
+                        record.addRecord(this.inputData);
+                        this.currentValue = record.value();
+                    },
+                    onUndo(){
+                        console.log('撤销');
+                    },
+                    onBack(){
+                        console.log('回退');
+                    }
+                }
+            })
+        }
+
+    </script>
+</body>
+
+</html>

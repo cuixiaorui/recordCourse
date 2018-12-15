@@ -93,7 +93,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         window.onload = function () {
-            var record = recordObj();
+            var record = createRecord();
             var app = new Vue({
                 el: '#app',
                 data: {
@@ -122,9 +122,9 @@
                 }
             })
 
-            function recordObj() {
-                let undoStack = stack();
-                let rollbackStack = stack();
+            function createRecord() {
+                let undoStack = createStack();
+                let rollbackStack = createStack();
                 let recordLimit = 6;
                 return {
                     getTopValue() {
@@ -156,7 +156,7 @@
                 }
             }
 
-            function stack() {
+            function createStack() {
                 var list = [];
                 return {
                     /**

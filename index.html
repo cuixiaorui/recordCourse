@@ -7,28 +7,155 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>撤销小教程</title>
     <style>
-        html{
+        html {
             background: pink;
+        }
+        .circleBox {
+            display: flex;
+        }
+
+        .circle {
+            margin: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .red {
+            background: red;
+        }
+
+        .green {
+            background: green;
+        }
+
+        .blue {
+            background: blue;
+        }
+
+        .undoList,
+        .rollbackList {
+            display: flex;
+            flex-flow: column-reverse;
+            margin-right: 20px;
+            width: 70px;
+            height: 450px;
+            border: 1px solid black;
+        }
+
+        .listBox {
+            display: flex;
         }
     </style>
 </head>
 
 <body>
     <div id="app">
-        <input type="text" v-model="inputData"/>
-        <button @click="onAddRecord">添加记录</button>
-        <div>
+        <main>
+            <div>
+                点击添加：
+                <div class="circleBox">
+                    <div class="red circle" @click="onClickCircle('red')"></div>
+                    <div class="green circle" @click="onClickCircle('green')"></div>
+                    <div class="blue circle" @click="onClickCircle('blue')"></div>
+                </div>
+            </div>
+
+            <div>
                 <button @click="onUndo">撤销</button>
                 <button @click="onBack">回退</button>
-        </div>
-        <div>
-            当前的值：{{currentValue}}
-        </div>
+            </div>
+            <div>
+                <div>
+                    <p> 当前的视图</p>
+                    <div :class="currentView" class="circle"></div>
+                </div>
+                <div class="listBox">
+                    <div>
+                        <p>可撤銷列表</p>
+                        <div class="undoList">
+                            <div v-for="type in undoList" :class="type" class="circle"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p>可回退列表</p>
+                        <div class="rollbackList">
+                            <div v-for="type in rollbackList" :class="type" class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
     <script>
         window.onload = function () {
-            //数据结构
+            var record = recordObj();
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    currentView: "",
+                    undoList: [],
+                    rollbackList: []
+                },
+                methods: {
+                    onClickCircle(type) {
+                        record.addRecord(type);
+                        this.updateData();
+                    },
+                    onUndo() {
+                        record.undoRecord();
+                        this.updateData();
+                    },
+                    onBack() {
+                        record.rollbackRecord();
+                        this.updateData();
+                    },
+                    updateData() {
+                        this.currentView = record.getTopValue();
+                        this.undoList = record.getUndoStack();
+                        this.rollbackList = record.getrollbackStack();
+                    }
+                }
+            })
+
+            function recordObj() {
+                let undoStack = stack();
+                let rollbackStack = stack();
+                let recordLimit = 6;
+                return {
+                    getTopValue() {
+                        return undoStack.getTop();
+                    },
+                    addRecord(data) {
+                        if (undoStack.size() >= recordLimit) {
+                            undoStack.shift();
+                        }
+                        undoStack.push(data);
+                        rollbackStack.clear();
+                    },
+                    undoRecord() {
+                        if (undoStack.empty()) return;
+                        const data = undoStack.top();
+                        rollbackStack.push(data);
+                    },
+                    rollbackRecord() {
+                        if (rollbackStack.empty()) return;
+                        const data = rollbackStack.top();
+                        undoStack.push(data);
+                    },
+                    getUndoStack() {
+                        return undoStack.getList();
+                    },
+                    getrollbackStack() {
+                        return rollbackStack.getList();
+                    }
+                }
+            }
+
             function stack() {
                 var list = [];
                 return {
@@ -55,75 +182,23 @@
                         return list.length === 0;
                     },
 
-                    /**
-                     * 清空
-                     */
                     clear() {
                         list = [];
                     },
 
-                    /**
-                     * 删除栈的第一个元素（栈底）
-                     */
                     shift() {
                         list.shift();
                     },
 
-                    getTop(){
-                        return list[list.length-1];
+                    getTop() {
+                        return list[list.length - 1];
+                    },
+
+                    getList() {
+                        return list;
                     }
                 }
             }
-
-            function recordObj() {
-                let undoStack = stack();
-                let rollbackStack = stack();
-                let recordLimit = 20;
-                return {
-                    value(){
-                        return undoStack.getTop();
-                    },
-                    addRecord(data) {
-                        if (undoStack.size() >= recordLimit) {
-                            undoStack.shift();
-                        }
-                        undoStack.push(data);
-                        rollbackStack.clear();
-                    },
-                    undoRecord() {
-                        if (undoStack.empty()) return;
-                        const data = undoStack.top();
-                        rollbackStack.push(data);
-                    },
-                    rollbackRecord() {
-                        if (rollbackStack.empty()) return;
-                        const data = rollbackStack.top();
-                        undoStack.push(data);
-                    }
-                }
-            }
-            var record = recordObj();
-
-            var app = new Vue({
-                el: '#app',
-                data: {
-                    message: 'Hello Vue!',
-                    currentValue:"",
-                    inputData:""
-                },
-                methods: {
-                    onAddRecord() {
-                        record.addRecord(this.inputData);
-                        this.currentValue = record.value();
-                    },
-                    onUndo(){
-                        console.log('撤销');
-                    },
-                    onBack(){
-                        console.log('回退');
-                    }
-                }
-            })
         }
 
     </script>

@@ -125,13 +125,13 @@
             function createRecord() {
                 let undoStack = createStack();
                 let rollbackStack = createStack();
-                let recordLimit = 6;
+                const MAX_LIMIT = 6;
                 return {
                     getTopValue() {
-                        return undoStack.getTop();
+                        return undoStack.peek();
                     },
                     addRecord(data) {
-                        if (undoStack.size() >= recordLimit) {
+                        if (undoStack.size() >= MAX_LIMIT) {
                             undoStack.shift();
                         }
                         undoStack.push(data);
@@ -139,12 +139,12 @@
                     },
                     undoRecord() {
                         if (undoStack.empty()) return;
-                        const data = undoStack.top();
+                        const data = undoStack.pop();
                         rollbackStack.push(data);
                     },
                     rollbackRecord() {
                         if (rollbackStack.empty()) return;
-                        const data = rollbackStack.top();
+                        const data = rollbackStack.pop();
                         undoStack.push(data);
                     },
                     getUndoStack() {
@@ -170,7 +170,7 @@
                     /**
                      * 出栈
                      */
-                    top() {
+                    pop() {
                         return list.pop();
                     },
 
@@ -190,7 +190,7 @@
                         list.shift();
                     },
 
-                    getTop() {
+                    peek() {
                         return list[list.length - 1];
                     },
 
